@@ -1,0 +1,97 @@
+#!/bin/sh
+. $HOME/.profile > /dev/null 2>&1
+set -x
+
+ISCLUSTERDB=/tmp/ISCLUSTERDB.txt
+sqlplus -s "/as sysdba"<<EOF
+set head off
+set trimspool on
+set linesize 200
+set pagesize 0
+set feedback on
+set echo off
+select value from v\$parameter where name='cluster_database';
+spool ${ISCLUSTERDB}
+/
+spool off
+exit;
+EOF
+
+DB_VERSION=/tmp/DB_VERSION.txt
+sqlplus -s "/as sysdba"<<EOF
+set head off
+set trimspool on
+set linesize 200
+set pagesize 0
+set feedback on
+set echo off
+select version from v\$instance;
+spool ${DB_VERSION}
+/
+spool off
+exit;
+EOF
+
+TDATE=$(date "+%Y%m%d")
+
+##Create a functions to check if the VALID_NODE_CHECKING_REGISTRATION already exists
+
+_chk_node_entry_exist_single () {
+                       NODE_ENTRY_CHK=/tmp/node_entry_chk.txt
+                       grep VALID_NODE_CHECKING_REGISTRATION ${TNS_ADMIN}/listener.ora > ${NODE_ENTRY_CHK}
+                       
+                       filesize=$(cat ${NODE_ENTRY_CHK}|wc -m)
+                       if [ $filesize != 0 ]; then
+                       echo "VALID_NODE_CHECKING_REGISTRATION Already exists"
+                       exit
+                       else
+                       cp ${TNS_ADMIN}/listener.ora ${TNS_ADMIN}/listener.ora.${TDATE}
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER=LOCAL">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_${ORACLE_SID}=LOCAL">>${TNS_ADMIN}/listener.ora
+                       fi
+}
+
+_chk_node_entry_exist_rac_11g () {
+                       NODE_ENTRY_CHK=/tmp/node_entry_chk.txt
+                       grep VALID_NODE_CHECKING_REGISTRATION ${TNS_ADMIN}/listener.ora > ${NODE_ENTRY_CHK}
+                       
+                       filesize=$(cat ${NODE_ENTRY_CHK}|wc -m)
+                       if [ $filesize != 0 ]; then
+                       echo "VALID_NODE_CHECKING_REGISTRATION Already exists"
+                       exit
+                       else
+                       cp ${TNS_ADMIN}/listener.ora ${TNS_ADMIN}/listener.ora.${TDATE}
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN1=SUBNET">>${TNS_ADMIN}/listener.ora 
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN2=SUBNET">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN3=SUBNET">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER=SUBNET">>${TNS_ADMIN}/listener.ora
+                       fi
+}
+
+_chk_node_entry_exist_rac_12c () {
+                       NODE_ENTRY_CHK=/tmp/node_entry_chk.txt
+                       grep VALID_NODE_CHECKING_REGISTRATION ${TNS_ADMIN}/listener.ora > ${NODE_ENTRY_CHK}
+                       
+                       filesize=$(cat ${NODE_ENTRY_CHK}|wc -m)
+                       if [ $filesize != 0 ]; then
+                       echo "VALID_NODE_CHECKING_REGISTRATION Already exists"
+                       exit
+                       else
+                       cp ${TNS_ADMIN}/listener.ora ${TNS_ADMIN}/listener.ora.${TDATE}
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN1=OFF   ">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN2=OFF   ">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN3=OFF   ">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SUBNET      ">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN1=SUBNET">>${TNS_ADMIN}/listener.ora
+                       echo "VALID_NODE_CHECKING_REGISTRATION_MGMTLSNR=SUBNET      ">>${TNS_ADMIN}/listener.ora
+                       fi
+}
+
+if [ -e ${ISCLUSTERDB} ] && [ "$(grep FALSE ${ISCLUSTERDB})" == "FALSE" ]; then
+   _chk_node_entry_exist_single 
+   
+elif [ -e ${DB_VERSION} ] && [ "$(grep 11.2.0.3 ${DB_VERSION})" == "11.2.0.3.0" ]; then
+   _chk_node_entry_exist_rac_11g 
+else
+   _chk_node_entry_exist_rac_12c
+fi

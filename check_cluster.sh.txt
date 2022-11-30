@@ -1,0 +1,55 @@
+#!/bin/sh
+. $HOME/.profile > /dev/null 2>&1
+
+ISCLUSTERDB=/tmp/ISCLUSTERDB.txt
+sqlplus -s "/as sysdba"<<EOF
+set head off
+set trimspool on
+set linesize 200
+set pagesize 0
+set feedback on
+set echo off
+select value from v\$parameter where name='cluster_database';
+spool ${ISCLUSTERDB}
+/
+spool off
+exit;
+EOF
+
+DB_VERSION=/tmp/DB_VERSION.txt
+sqlplus -s "/as sysdba"<<EOF
+set head off
+set trimspool on
+set linesize 200
+set pagesize 0
+set feedback on
+set echo off
+select version from v\$instance;
+spool ${DB_VERSION}
+/
+spool off
+exit;
+EOF
+
+TDATE=$(date "+%Y%m%d")
+
+if [ -e ${ISCLUSTERDB} ] && [ "$(grep FALSE ${ISCLUSTERDB})" == "FALSE" ]; then
+   cp ${TNS_ADMIN}/listener.ora ${TNS_ADMIN}/listener.ora.${TDATE}
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER=LOCAL">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_${ORACLE_SID}=LOCAL">>${TNS_ADMIN}/listener.ora
+
+elif [ -e ${DB_VERSION} ] && [ "$(grep 11.2.0.3 ${DB_VERSION})" == "11.2.0.3.0" ]; then
+   cp ${TNS_ADMIN}/listener.ora ${TNS_ADMIN}/listener.ora.${TDATE}
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN1=SUBNET">>${TNS_ADMIN}/listener.ora 
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN2=SUBNET">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN3=SUBNET">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER=SUBNET">>${TNS_ADMIN}/listener.ora
+else
+   cp ${TNS_ADMIN}/listener.ora ${TNS_ADMIN}/listener.ora.${TDATE}
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN1=OFF   ">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN2=OFF   ">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN3=OFF   ">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SUBNET      ">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_LISTENER_SCAN1=SUBNET">>${TNS_ADMIN}/listener.ora
+   echo "VALID_NODE_CHECKING_REGISTRATION_MGMTLSNR=SUBNET      ">>${TNS_ADMIN}/listener.ora
+fi
