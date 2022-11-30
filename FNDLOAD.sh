@@ -21,5 +21,5 @@ if [ ${WHATLDT} == "N" ] || [ ${WHATLDT} == "n" ]; then
 FNDLOAD apps/$APPSPWD 0 Y UPLOAD $FND_TOP/patch/115/import/$LCT_NAME $LDT_NAME CUSTOM_MODE=FORCE
 else
 ##For ALERT Only
-FNDLOAD apps/$APPSPWD 0 Y UPLOAD $ALR_TOP/patch/115/import/alr.lct  $LDT_NAME CUSTOM_MODE=FORCE
+FNDLOAD apps/$APPSPWD 0 Y UPLOAD $ALR_TOP/patch/115/import/alr.lct $LDT_NAME CUSTOM_MODE=FORCE
 fi
