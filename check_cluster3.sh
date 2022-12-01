@@ -3,8 +3,8 @@
 ##
 ## Author: Ishmael Seshie
 ## ishglo.devops@gmail.com
-## Version: 1
-set -x
+## Version: 2
+#set -x
 
 TDATE=$(date "+%Y%m%d")
 
