@@ -1,5 +1,3 @@
-#!/bin/ksh
-Author:Ishmael.seshie
 . $HOME/.profile > /dev/null 2>&1
 set -x
 LOGFILE=/u00/home/orasw/util/clearTempSpaceEaters.sql
