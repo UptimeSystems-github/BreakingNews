@@ -1,4 +1,5 @@
 #!/bin/sh
+Author: Ishmael Seshie
 #set -x
 echo "
      PROGRAM LCT is afcpprog.lct
@@ -23,3 +24,6 @@ else
 ##For ALERT Only
 FNDLOAD apps/$APPSPWD 0 Y UPLOAD $ALR_TOP/patch/115/import/alr.lct $LDT_NAME CUSTOM_MODE=FORCE
 fi
+##Test
+##Update 2022
+##Update 2023

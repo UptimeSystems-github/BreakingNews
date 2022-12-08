@@ -1,5 +1,10 @@
 #!/bin/sh
-set -x
+
+##
+## Author: Ishmael Seshie
+## ishglo.devops@gmail.com
+## Version: 2
+#set -x
 
 TDATE=$(date "+%Y%m%d")
 
